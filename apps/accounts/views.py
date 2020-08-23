@@ -16,12 +16,12 @@ class SignUpAPIView(GenericAPIView):
     serializer_class = UserSerializer
 
     def post(self, request):
-        serializer = self.get_serializer(request.data)
+        serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
 
         user = serializer.save()
         token = Token.objects.create(user=user)
-        return Response(data={'detail': _('Welcome!'), 'token': token},
+        return Response(data={'detail': _('Welcome!'), 'token': token.key},
                         status=status.HTTP_201_CREATED)
 
 
@@ -33,5 +33,3 @@ class LogoutAPIView(GenericAPIView):
 
         return Response(data={'detail': _('Logged out successfully!')},
                         status=status.HTTP_200_OK)
-
-
