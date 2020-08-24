@@ -1,12 +1,15 @@
 import redis
 
+from django.shortcuts import redirect
 from django.conf import settings
 
 from rest_framework.generics import GenericAPIView
 from rest_framework.permissions import IsAuthenticated
 from rest_framework import status
 from rest_framework.response import Response
+from rest_framework.exceptions import NotFound
 
+from .models import ShortenedURL
 from .serializers import ShortenedURLSerializer
 
 redis_instance = redis.Redis(host=settings.REDIS_HOST,
@@ -22,10 +25,12 @@ class ShortenURLAPIView(GenericAPIView):
         serializer.is_valid(raise_exception=True)
 
         shortened_url = serializer.save()
+        key = shortened_url.key
 
-        redis_instance.set(name=shortened_url.short_url,
+        # Set created keys in redis for future redirection requests
+        redis_instance.set(name=key,
                            value=shortened_url.long_url)
-        redis_instance.set(name=shortened_url.redis_counter_key,
+        redis_instance.set(name=ShortenedURL.redis_counter_key(key),
                            value=0)
 
         return Response(data={'shortened_url': shortened_url.short_url},
@@ -33,4 +38,12 @@ class ShortenURLAPIView(GenericAPIView):
 
 
 class RedirectAPIView(GenericAPIView):
-    pass
+
+    def get(self, request, key):
+        url = redis_instance.get(name=key)
+        if not url:
+            raise NotFound()
+
+        redis_instance.incr(name=key)
+
+        return redirect(to=url)

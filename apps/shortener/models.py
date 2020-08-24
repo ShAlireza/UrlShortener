@@ -10,6 +10,9 @@ class ShortenedURL(models.Model):
     key = models.CharField(max_length=512, unique=True, blank=True,
                            null=True)
 
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
     hits = models.IntegerField(default=0)
 
     def __str__(self):
@@ -20,10 +23,16 @@ class ShortenedURL(models.Model):
                 self.long_url.startswith("https")):
             raise ValidationError('URL should start with "http" or "https"')
 
-    @property
-    def short_url(self):
-        return settings.SHORT_URL_DOMAIN + self.key
+    @staticmethod
+    def short_url(key):
+        return settings.SHORT_URL_DOMAIN + key
 
-    @property
-    def redis_counter_key(self):
-        return self.short_url + '_' + 'counter'
+    @staticmethod
+    def redis_counter_key(key):
+        return key + '_' + 'counter'
+
+    def set_on_redis(self, redis_instance):
+        redis_instance.set(name=self.key,
+                           value=self.long_url)
+        redis_instance.set(name=self.redis_counter_key(self.key),
+                           value=0)
