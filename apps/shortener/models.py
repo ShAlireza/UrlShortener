@@ -1,20 +1,25 @@
+from django.conf import settings
 from django.db import models
 
 from rest_framework.exceptions import ValidationError
 
 
 class ShortenedURL(models.Model):
-    source = models.CharField(max_length=512)
-    suggested_path = models.CharField(max_length=128)
-    destination = models.CharField(max_length=512, blank=True, null=True,
-                                   unique=True)
+    long_url = models.CharField(max_length=512)
+    suggested_path = models.CharField(max_length=128, blank=True, null=True)
+    key = models.CharField(max_length=512, unique=True, blank=True,
+                           null=True)
 
     hits = models.IntegerField(default=0)
 
     def __str__(self):
-        return '%s %s' % (self.source, self.destination)
+        return '%s %s' % (self.long_url, self.short_url)
 
     def clean(self):
-        if not (self.destination.startswith("http") or
-                self.destination.startswith("https")):
+        if not (self.long_url.startswith("http") or
+                self.long_url.startswith("https")):
             raise ValidationError('URL should start with "http" or "https"')
+
+    @property
+    def short_url(self):
+        return settings.SHORT_URL_DOMAIN + self.key
