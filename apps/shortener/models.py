@@ -8,8 +8,8 @@ class ShortenedURL(models.Model):
     user = models.ForeignKey('accounts.User', related_name='urls',
                              on_delete=models.CASCADE)
     long_url = models.CharField(max_length=512)
-    suggested_path = models.CharField(max_length=128, blank=True, null=True)
-    key = models.CharField(max_length=512, unique=True, blank=True,
+    suggested_path = models.CharField(max_length=32, blank=True, null=True)
+    key = models.CharField(max_length=8, unique=True, blank=True,
                            null=True, db_index=True)
 
     created_at = models.DateTimeField(auto_now_add=True)
