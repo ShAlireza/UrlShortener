@@ -23,3 +23,7 @@ class ShortenedURL(models.Model):
     @property
     def short_url(self):
         return settings.SHORT_URL_DOMAIN + self.key
+
+    @property
+    def redis_counter_key(self):
+        return self.short_url + '_' + 'counter'

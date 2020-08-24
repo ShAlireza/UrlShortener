@@ -19,4 +19,5 @@ from django.urls import path, include
 urlpatterns = [
     path('api/super-admin/', admin.site.urls),
     path('api/accounts/', include('apps.accounts.urls')),
+    path('r/', include('apps.shortener.urls'))
 ]
