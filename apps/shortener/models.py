@@ -8,12 +8,10 @@ class ShortenedURL(models.Model):
     long_url = models.CharField(max_length=512)
     suggested_path = models.CharField(max_length=128, blank=True, null=True)
     key = models.CharField(max_length=512, unique=True, blank=True,
-                           null=True)
+                           null=True, db_index=True)
 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
-
-    hits = models.IntegerField(default=0)
 
     def __str__(self):
         return '%s %s' % (self.long_url, self.short_url)
@@ -22,6 +20,10 @@ class ShortenedURL(models.Model):
         if not (self.long_url.startswith("http") or
                 self.long_url.startswith("https")):
             raise ValidationError('URL should start with "http" or "https"')
+
+    @property
+    def hits(self):
+        return self.visits.count()
 
     @staticmethod
     def short_url(key):
@@ -34,16 +36,21 @@ class ShortenedURL(models.Model):
 
 class PlatFormTypes:
     MOBILE = 'mobile'
+    TABLET = 'tablet'
     DESKTOP = 'desktop'
 
     TYPES = (
         (MOBILE, MOBILE),
-        (DESKTOP, DESKTOP)
+        (TABLET, TABLET),
+        (DESKTOP, DESKTOP),
     )
 
 
 class Visit(models.Model):
-    created_at = models.DateTimeField(auto_now_add=True)
-    platform = models.CharField(max_length=16, choices=PlatFormTypes.TYPES)
-    browser = models.CharField(max_length=128)
-    session = models.CharField(max_length=128)
+    short_url = models.ForeignKey(ShortenedURL, related_name='visits',
+                                  on_delete=models.CASCADE)
+    created_at = models.DateTimeField(auto_now_add=True, db_index=True)
+    platform = models.CharField(max_length=16, choices=PlatFormTypes.TYPES,
+                                db_index=True)
+    browser = models.CharField(max_length=128, db_index=True)
+    session_key = models.CharField(max_length=64, db_index=True)

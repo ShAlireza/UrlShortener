@@ -21,9 +21,8 @@ class ShortenURLAPIView(GenericAPIView):
     serializer_class = ShortenedURLSerializer
 
     def get(self, request):
-        from .tasks import test
-        test.delay('hello')
-        print(request.META['HTTP_USER_AGENT'])
+        print(request.user_agent.browser)
+        print(request.user_agent.is_pc)
         return Response(data={'data': request.META['HTTP_USER_AGENT']})
 
     def post(self, request):
@@ -42,8 +41,26 @@ class ShortenURLAPIView(GenericAPIView):
 class RedirectAPIView(GenericAPIView):
 
     def get(self, request, key):
+        from .tasks import update_shortened_url
         url = redis_instance.get(name=key)
         if not url:
             raise NotFound()
 
+        platform = self.get_platform()
+        browser = request.user_agent.browser.family
+        session_key = request.session.session_key
+
+        # Handle database updates with celery tasks
+        update_shortened_url.delay([key, platform, browser, session_key])
+
         return redirect(to=url)
+
+    def get_platform(self):
+        from .models import PlatFormTypes
+
+        if self.request.user_agent.is_mobile:
+            return PlatFormTypes.MOBILE
+        elif self.request.user_agent.is_tablet:
+            return PlatFormTypes.TABLET
+        else:
+            return PlatFormTypes.DESKTOP
