@@ -3,10 +3,12 @@ from django.db import models
 from rest_framework.exceptions import ValidationError
 
 
-class ShortenedUrl(models.Model):
+class ShortenedURL(models.Model):
     source = models.CharField(max_length=512)
+    suggested_path = models.CharField(max_length=128)
     destination = models.CharField(max_length=512, blank=True, null=True,
                                    unique=True)
+
     hits = models.IntegerField(default=0)
 
     def __str__(self):
