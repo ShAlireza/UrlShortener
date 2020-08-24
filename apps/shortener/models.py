@@ -30,3 +30,20 @@ class ShortenedURL(models.Model):
     def set_on_redis(self, redis_instance):
         redis_instance.set(name=self.key,
                            value=self.long_url)
+
+
+class PlatFormTypes:
+    MOBILE = 'mobile'
+    DESKTOP = 'desktop'
+
+    TYPES = (
+        (MOBILE, MOBILE),
+        (DESKTOP, DESKTOP)
+    )
+
+
+class Visit(models.Model):
+    created_at = models.DateTimeField(auto_now_add=True)
+    platform = models.CharField(max_length=16, choices=PlatFormTypes.TYPES)
+    browser = models.CharField(max_length=128)
+    session = models.CharField(max_length=128)

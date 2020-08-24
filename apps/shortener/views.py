@@ -23,7 +23,8 @@ class ShortenURLAPIView(GenericAPIView):
     def get(self, request):
         from .tasks import test
         test.delay('hello')
-        return Response(data={'tasks run'})
+        print(request.META['HTTP_USER_AGENT'])
+        return Response(data={'data': request.META['HTTP_USER_AGENT']})
 
     def post(self, request):
         serializer = self.get_serializer(data=request.data)
@@ -44,7 +45,5 @@ class RedirectAPIView(GenericAPIView):
         url = redis_instance.get(name=key)
         if not url:
             raise NotFound()
-
-        redis_instance.incr(name=key)
 
         return redirect(to=url)

@@ -7,11 +7,11 @@ from .services import ShortenedURLService
 class ShortenedURLSerializer(serializers.ModelSerializer):
     class Meta:
         model = ShortenedURL
-        fields = ('source', 'suggested_path', 'destination',
+        fields = ('long_url', 'suggested_path', 'key',
                   'hits')
 
         extra_kwargs = {
-            'destination': {'read_only': True},
+            'key': {'read_only': True},
             'hits': {'read_only': True}
         }
 
