@@ -9,21 +9,16 @@ from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.exceptions import NotFound
 
-from .models import ShortenedURL
 from .serializers import ShortenedURLSerializer
+from .tasks import update_shortened_url
 
 redis_instance = redis.Redis(host=settings.REDIS_HOST,
                              port=settings.REDIS_PORT, db=0)
 
 
 class ShortenURLAPIView(GenericAPIView):
-    # permission_classes = (IsAuthenticated,)
+    permission_classes = (IsAuthenticated,)
     serializer_class = ShortenedURLSerializer
-
-    def get(self, request):
-        print(request.user_agent.browser)
-        print(request.user_agent.is_pc)
-        return Response(data={'data': request.META['HTTP_USER_AGENT']})
 
     def post(self, request):
         serializer = self.get_serializer(data=request.data)
@@ -41,7 +36,6 @@ class ShortenURLAPIView(GenericAPIView):
 class RedirectAPIView(GenericAPIView):
 
     def get(self, request, key):
-        from .tasks import update_shortened_url
         url = redis_instance.get(name=key)
         if not url:
             raise NotFound()
