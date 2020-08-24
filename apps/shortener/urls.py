@@ -4,9 +4,9 @@ from . import views
 
 app_name = 'shortener'
 
-url_patterns = [
-    path('<slug:key>', view=views.RedirectAPIView.as_view(),
-         name='short_url_redirection'),
+urlpatterns = [
     path('short-url', view=views.ShortenURLAPIView.as_view(),
-         name='short_url')
+         name='short_url'),
+    path('<slug:key>', view=views.RedirectAPIView.as_view(),
+         name='short_url_redirection')
 ]

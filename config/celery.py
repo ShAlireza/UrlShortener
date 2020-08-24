@@ -7,7 +7,7 @@ from celery import Celery
 from celery.signals import setup_logging
 
 os.environ.setdefault('DJANGO_SETTINGS_MODULE',
-                      'gamein_backend.settings.production')
+                      'config.settings')
 
 app = Celery('config')
 app.config_from_object('django.conf:settings', namespace='CELERY')

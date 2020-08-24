@@ -1,6 +1,6 @@
 from config.celery import app
 
 
-@app.task('test')
+@app.task
 def test(string):
     print(string)

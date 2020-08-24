@@ -17,21 +17,22 @@ redis_instance = redis.Redis(host=settings.REDIS_HOST,
 
 
 class ShortenURLAPIView(GenericAPIView):
-    permission_classes = (IsAuthenticated,)
+    # permission_classes = (IsAuthenticated,)
     serializer_class = ShortenedURLSerializer
+
+    def get(self, request):
+        from .tasks import test
+        test.delay('hello')
+        return Response(data={'tasks run'})
 
     def post(self, request):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
 
         shortened_url = serializer.save()
-        key = shortened_url.key
 
         # Set created keys in redis for future redirection requests
-        redis_instance.set(name=key,
-                           value=shortened_url.long_url)
-        redis_instance.set(name=ShortenedURL.redis_counter_key(key),
-                           value=0)
+        shortened_url.set_on_redis(redis_instance)
 
         return Response(data={'shortened_url': shortened_url.short_url},
                         status=status.HTTP_201_CREATED)

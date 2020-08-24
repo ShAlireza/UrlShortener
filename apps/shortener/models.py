@@ -27,12 +27,6 @@ class ShortenedURL(models.Model):
     def short_url(key):
         return settings.SHORT_URL_DOMAIN + key
 
-    @staticmethod
-    def redis_counter_key(key):
-        return key + '_' + 'counter'
-
     def set_on_redis(self, redis_instance):
         redis_instance.set(name=self.key,
                            value=self.long_url)
-        redis_instance.set(name=self.redis_counter_key(self.key),
-                           value=0)
