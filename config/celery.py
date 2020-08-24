@@ -19,3 +19,10 @@ def config_loggers(*args, **kwargs):
 
 
 app.autodiscover_tasks(lambda: settings.INSTALLED_APPS)
+
+app.conf.beat_schedule = {
+    'add-every-30-seconds': {
+        'task': 'apps.shortener.tasks.update',
+        'schedule': 3600.0,
+    },
+}

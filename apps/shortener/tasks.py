@@ -1,6 +1,6 @@
 from config.celery import app
 
-from .models import ShortenedURL, Visit
+from .models import ShortenedURL, Visit, Analytic
 
 
 @app.task
@@ -12,3 +12,7 @@ def update_shortened_url(short_url_key, platform, browser, session_key):
     return visit.id
 
 
+@app.task
+def update():
+    for analytic in Analytic.objects.all():
+        analytic.update_analytic()
