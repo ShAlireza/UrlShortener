@@ -29,7 +29,7 @@ class ShortenURLAPIView(GenericAPIView):
         # Set created keys in redis for future redirection requests
         shortened_url.set_on_redis(redis_instance)
 
-        return Response(data={'shortened_url': shortened_url.short_url},
+        return Response(data={'shortened_url': shortened_url.short_url()},
                         status=status.HTTP_201_CREATED)
 
 

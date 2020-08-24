@@ -10,3 +10,5 @@ def update_shortened_url(short_url_key, platform, browser, session_key):
                                  browser=browser, session_key=session_key)
 
     return visit.id
+
+

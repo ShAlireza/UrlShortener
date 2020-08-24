@@ -20,10 +20,7 @@ class ShortenedURLService:
             key += dictionary[obj_id % base]
             obj_id /= base
 
-        # Add some 'a' characters to key if its length is less than "length"
-        extend_to_six = 'a' * (length - len(key))
-
-        return extend_to_six + key[len(key)::-1]
+        return key[len(key)::-1]
 
     @staticmethod
     def short_url_to_id(key, base=62):

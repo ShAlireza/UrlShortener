@@ -27,9 +27,11 @@ class ShortenedURL(models.Model):
     def hits(self):
         return self.visits.count()
 
-    @staticmethod
-    def short_url(key):
-        return settings.SHORT_URL_DOMAIN + key
+    def short_url(self):
+        if self.suggested_path:
+            return (settings.SHORT_URL_DOMAIN + self.key +
+                    '-' + self.suggested_path)
+        return settings.SHORT_URL_DOMAIN + self.key
 
     def set_on_redis(self, redis_instance):
         redis_instance.set(name=self.key,
@@ -48,8 +50,15 @@ class PlatFormTypes:
     )
 
 
+class Analytic(models.Model):
+    short_url = models.OneToOneField('ShortenedURL', related_name='analytic',
+                                     on_delete=models.CASCADE)
+    total_visits = models.PositiveIntegerField()
+
+
+
 class Visit(models.Model):
-    short_url = models.ForeignKey(ShortenedURL, related_name='visits',
+    short_url = models.ForeignKey('ShortenedURL', related_name='visits',
                                   on_delete=models.CASCADE)
     created_at = models.DateTimeField(auto_now_add=True, db_index=True)
     platform = models.CharField(max_length=16, choices=PlatFormTypes.TYPES,
