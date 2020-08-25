@@ -6,7 +6,7 @@ __all__ = ('ShortenedURLService',)
 class ShortenedURLService:
 
     @staticmethod
-    def id_to_short_url(obj: ShortenedURL, length=6):
+    def id_to_short_url(obj: ShortenedURL):
         # Encode obj id to a number in base 62(alphanumeric character sequence)
         dictionary = ("abcdefghijklmnopqrstuvwxyz"
                       "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
@@ -15,10 +15,11 @@ class ShortenedURLService:
 
         obj_id = obj.id
         key = ''
-
+        print(obj_id, base)
+        print(dictionary[obj_id % base])
         while obj_id > 0:
             key += dictionary[obj_id % base]
-            obj_id /= base
+            obj_id //= base
 
         return key[len(key)::-1]
 

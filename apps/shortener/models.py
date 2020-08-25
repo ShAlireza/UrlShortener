@@ -122,6 +122,9 @@ class Analytic(models.Model):
     def date_fields():
         return 'always', 'today', 'yesterday', 'last_week', 'last_month'
 
+    def __str__(self):
+        return self.short_url.__str__()
+
 
 class Visit(models.Model):
     short_url = models.ForeignKey('ShortenedURL', related_name='visits',

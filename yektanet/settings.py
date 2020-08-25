@@ -141,7 +141,7 @@ AUTHENTICATION_BACKENDS = (
     'apps.accounts.backends.EmailAuthenticationBackend',
 )
 
-SHORT_URL_DOMAIN = 'yek.ta/r/'
+SHORT_URL_DOMAIN = 'localhost:8000/r/'
 
 REDIS_HOST = 'localhost'
 REDIS_PORT = 6379

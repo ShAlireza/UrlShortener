@@ -36,6 +36,7 @@ class ShortenURLAPIView(GenericAPIView):
 class RedirectAPIView(GenericAPIView):
 
     def get(self, request, key):
+        key = key[:key.index('-')]
         url = redis_instance.get(name=key)
         if not url:
             raise NotFound()
@@ -45,9 +46,11 @@ class RedirectAPIView(GenericAPIView):
         session_key = request.session.session_key
 
         # Handle database updates with celery tasks
-        update_shortened_url.delay([key, platform, browser, session_key])
+        update_shortened_url.delay(key, platform, browser, session_key)
 
-        return redirect(to=url)
+        url = url.decode('utf-8')
+
+        return redirect(url)
 
     def get_platform(self):
         from .models import PlatFormTypes
