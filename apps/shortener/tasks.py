@@ -1,4 +1,4 @@
-from config.celery import app
+from yektanet.celery import app
 
 from .models import ShortenedURL, Visit, Analytic
 
