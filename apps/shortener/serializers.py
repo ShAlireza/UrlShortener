@@ -27,5 +27,5 @@ class ShortenedURLSerializer(serializers.ModelSerializer):
         obj = super().create(validated_data)
         obj.key = ShortenedURLService.id_to_short_url(obj)
         obj.save()
-        Analytic.objects.create(short_url=obj)
+        Analytic.create_new(short_url=obj)
         return obj

@@ -58,26 +58,36 @@ class Analytic(models.Model):
     all_visits = models.JSONField(default=dict)
     unique_visits = models.JSONField(default=dict)
 
+    @classmethod
+    def create_new(cls, short_url):
+        default = {'total': {}, 'platform': {}, 'browser': {}}
+        return cls.objects.create(short_url=short_url, all_visits=default,
+                                  unique_visits=default.copy())
+
     def _update(self, uniques=False):
         queryset = self.short_url.visits.all()
+        field = self.all_visits
         if uniques:
-            queryset = queryset.distinct('session_key')
+            ids = queryset.distinct('session_key').values_list('id',
+                                                               flat=True)
+            queryset = self.short_url.visits.filter(id__in=ids)
+            field = self.unique_visits
 
         queries = self.time_separate_queryset(queryset)
 
         for date_field in self.date_fields():
             # Total visits
-            self.all_visits['total'][date_field] = queries[date_field].count()
+            field['total'][date_field] = queries[date_field].count()
 
             # Platform specific visits
-            self.all_visits['platform'][date_field] = queries[
+            field['platform'][date_field] = list(queries[
                 date_field].values('platform').order_by().annotate(
-                models.Count('platform'))
+                models.Count('platform')))
 
             # Browser specific visits
-            self.all_visits['browser'][date_field] = queries[
+            field['browser'][date_field] = list(queries[
                 date_field].values('browser').order_by().annotate(
-                models.Count('browser'))
+                models.Count('browser')))
 
     def update_analytic(self):
         self._update(uniques=False)
@@ -91,16 +101,15 @@ class Analytic(models.Model):
         last_week_t = self.date_range(days=7)
         last_month_t = self.date_range(days=30)
 
-        always = queryset
         today = queryset.filter(created_at__gte=today_t)
         yesterday = queryset.filter(created_at__gte=yesterday_t[0],
-                                    created_at__ls=yesterday_t[1])
+                                    created_at__lt=yesterday_t[1])
         last_week = queryset.filter(created_at__gte=last_week_t[0],
-                                    created_at__ls=last_week_t[1])
+                                    created_at__lt=last_week_t[1])
         last_month = queryset.filter(created_at__gte=last_month_t[0],
-                                     created_at_ls=last_month_t[1])
+                                     created_at__lt=last_month_t[1])
 
-        queries = {'always': always, 'today': today,
+        queries = {'today': today,
                    'yesterday': yesterday,
                    'last_week': last_week,
                    'last_month': last_month}
@@ -120,7 +129,7 @@ class Analytic(models.Model):
 
     @staticmethod
     def date_fields():
-        return 'always', 'today', 'yesterday', 'last_week', 'last_month'
+        return 'today', 'yesterday', 'last_week', 'last_month'
 
     def __str__(self):
         return self.short_url.__str__()

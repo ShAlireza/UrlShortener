@@ -20,6 +20,13 @@ class ShortenURLAPIView(GenericAPIView):
     permission_classes = (IsAuthenticated,)
     serializer_class = ShortenedURLSerializer
 
+    def get(self, request):
+        urls = request.user.urls.all()
+        data = self.get_serializer(urls, many=True).data
+
+        return Response(data={'urls': data},
+                        status=status.HTTP_200_OK)
+
     def post(self, request):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
@@ -41,9 +48,14 @@ class RedirectAPIView(GenericAPIView):
         if not url:
             raise NotFound()
 
+        # Get user specific info
         platform = self.get_platform()
         browser = request.user_agent.browser.family
-        session_key = request.session.session_key
+        # self.request._request.session.save()
+        if not self.request.session.session_key:
+            self.request.session.save()
+
+        session_key = self.request.session.session_key
 
         # Handle database updates with celery tasks
         update_shortened_url.delay(key, platform, browser, session_key)
