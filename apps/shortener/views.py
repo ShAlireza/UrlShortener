@@ -48,16 +48,14 @@ class RedirectAPIView(GenericAPIView):
         if not url:
             raise NotFound()
 
-        # Get user specific info
         platform = self.get_platform()
         browser = request.user_agent.browser.family
-        # self.request._request.session.save()
         if not self.request.session.session_key:
             self.request.session.save()
 
         session_key = self.request.session.session_key
 
-        # Handle database updates with celery tasks
+        # Add a visit object to postgres db with an async celery task
         update_shortened_url.delay(key, platform, browser, session_key)
 
         url = url.decode('utf-8')

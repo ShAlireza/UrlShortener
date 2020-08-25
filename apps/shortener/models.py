@@ -6,9 +6,12 @@ from rest_framework.exceptions import ValidationError
 
 
 class ShortenedURL(models.Model):
+    """
+    Model for create new shortened url for users. 
+    """
     user = models.ForeignKey('accounts.User', related_name='urls',
                              on_delete=models.CASCADE)
-    long_url = models.CharField(max_length=512)
+    long_url = models.URLField(max_length=512)
     suggested_path = models.CharField(max_length=32, blank=True, null=True)
     key = models.CharField(max_length=8, unique=True, default='',
                            db_index=True)
@@ -18,11 +21,6 @@ class ShortenedURL(models.Model):
 
     def __str__(self):
         return f'{self.long_url} {self.key}'
-
-    def clean(self):
-        if not (self.long_url.startswith("http") or
-                self.long_url.startswith("https")):
-            raise ValidationError('URL should start with "http" or "https"')
 
     @property
     def hits(self):
@@ -39,18 +37,6 @@ class ShortenedURL(models.Model):
                            value=self.long_url)
 
 
-class PlatFormTypes:
-    MOBILE = 'mobile'
-    TABLET = 'tablet'
-    DESKTOP = 'desktop'
-
-    TYPES = (
-        (MOBILE, MOBILE),
-        (TABLET, TABLET),
-        (DESKTOP, DESKTOP),
-    )
-
-
 class Analytic(models.Model):
     short_url = models.OneToOneField('ShortenedURL', related_name='analytic',
                                      on_delete=models.CASCADE)
@@ -60,11 +46,21 @@ class Analytic(models.Model):
 
     @classmethod
     def create_new(cls, short_url):
+        """
+        Helper function for create a new instance of Analytic with default
+        dictionaries for all_visits and unique_visits fields.
+        :param short_url: 
+        :return: Analytic
+        """
         default = {'total': {}, 'platform': {}, 'browser': {}}
         return cls.objects.create(short_url=short_url, all_visits=default,
                                   unique_visits=default.copy())
 
     def _update(self, uniques=False):
+        """
+        Do update stuff needed for analytic fields
+        :param uniques: 
+        """
         queryset = self.short_url.visits.all()
         field = self.all_visits
         if uniques:
@@ -73,6 +69,7 @@ class Analytic(models.Model):
             queryset = self.short_url.visits.filter(id__in=ids)
             field = self.unique_visits
 
+        # Get query for each date range needed
         queries = self.time_separate_queryset(queryset)
 
         for date_field in self.date_fields():
@@ -90,12 +87,20 @@ class Analytic(models.Model):
                 models.Count('browser')))
 
     def update_analytic(self):
+        """
+        Helper method for updating both kind of analytics, all and unique 
+        """
         self._update(uniques=False)
         self._update(uniques=True)
         self.save()
 
-    def time_separate_queryset(self, queryset: models.QuerySet,
-                               apply_count=False):
+    def time_separate_queryset(self, queryset: models.QuerySet):
+        """
+        Create 4 new distinct querysets from base queryset according to 
+        4 different date ranges: today, yesterday, last week and last month
+        :param queryset: 
+        :return: Dict[str, models.Queryset]
+        """
         today_t = self.date_range()
         yesterday_t = self.date_range(days=1)
         last_week_t = self.date_range(days=7)
@@ -114,13 +119,16 @@ class Analytic(models.Model):
                    'last_week': last_week,
                    'last_month': last_month}
 
-        if apply_count:
-            queries = {k: v.count() for k, v in queries.items()}
-
         return queries
 
     @staticmethod
     def date_range(days=0):
+        """
+        Generate a lower bound for now minus given days
+        :param days: 
+        :return: Union[datetime.date, Tuple[datetime.date]]:
+        a single date if days = 0 otherwise a tuple
+        """
         now = timezone.now().date()
         if days:
             lower_bound = now - timezone.timedelta(days=days)
@@ -129,10 +137,29 @@ class Analytic(models.Model):
 
     @staticmethod
     def date_fields():
+        """
+        Get date field names used in json responses
+        :return: Tuple[str]
+        """
         return 'today', 'yesterday', 'last_week', 'last_month'
 
     def __str__(self):
         return self.short_url.__str__()
+
+
+class PlatFormTypes:
+    """
+    Helper class just used as enum for different kinds of platforms
+    """
+    MOBILE = 'mobile'
+    TABLET = 'tablet'
+    DESKTOP = 'desktop'
+
+    TYPES = (
+        (MOBILE, MOBILE),
+        (TABLET, TABLET),
+        (DESKTOP, DESKTOP),
+    )
 
 
 class Visit(models.Model):

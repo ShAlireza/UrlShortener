@@ -12,10 +12,16 @@ class AnalyticSerializer(serializers.ModelSerializer):
 
 class ShortenedURLSerializer(serializers.ModelSerializer):
     analytic = AnalyticSerializer(read_only=True)
+    short_url = serializers.SerializerMethodField('_short_url')
+
+    @staticmethod
+    def _short_url(obj: ShortenedURL):
+        return obj.short_url()
 
     class Meta:
         model = ShortenedURL
-        fields = ('long_url', 'suggested_path', 'key', 'hits', 'analytic')
+        fields = ('long_url', 'short_url', 'suggested_path', 'key',
+                  'analytic')
 
         extra_kwargs = {
             'key': {'read_only': True},

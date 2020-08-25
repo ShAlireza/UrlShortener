@@ -10,7 +10,7 @@ os.environ.setdefault('DJANGO_SETTINGS_MODULE',
                       'yektanet.settings')
 
 app = Celery('yektanet', broker='redis://localhost:6379')
-app.config_from_object('django.conf:settings', namespace='CELERY')
+app.config_from_object('django.conf.settings', namespace='CELERY')
 
 
 @setup_logging.connect
@@ -21,8 +21,8 @@ def config_loggers(*args, **kwargs):
 app.autodiscover_tasks(lambda: settings.INSTALLED_APPS)
 
 app.conf.beat_schedule = {
-    'add-every-30-seconds': {
+    'update-every-one-hour': {
         'task': 'apps.shortener.tasks.update',
-        'schedule': 10.0,
+        'schedule': 3600.0,
     },
 }
