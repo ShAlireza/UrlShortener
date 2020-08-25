@@ -10,7 +10,7 @@ from rest_framework.response import Response
 from rest_framework.exceptions import NotFound
 
 from .serializers import ShortenedURLSerializer
-from .tasks import update_shortened_url
+from .tasks import new_visit
 
 redis_instance = redis.Redis(host=settings.REDIS_HOST,
                              port=settings.REDIS_PORT, db=0)
@@ -56,7 +56,7 @@ class RedirectAPIView(GenericAPIView):
         session_key = self.request.session.session_key
 
         # Add a visit object to postgres db with an async celery task
-        update_shortened_url.delay(key, platform, browser, session_key)
+        new_visit.delay(key, platform, browser, session_key)
 
         url = url.decode('utf-8')
 

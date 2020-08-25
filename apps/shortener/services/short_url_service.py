@@ -15,8 +15,6 @@ class ShortenedURLService:
 
         obj_id = obj.id
         key = ''
-        print(obj_id, base)
-        print(dictionary[obj_id % base])
         while obj_id > 0:
             key += dictionary[obj_id % base]
             obj_id //= base
